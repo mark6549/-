@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-950 text-slate-100 selection:bg-indigo-500 selection:text-white">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arcade Strategy Suite</title>
+
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- PeerJS CDN for WebRTC Multiplayer -->
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 9999px;
+        }
+    </style>
+</head>
+
+<body class="h-full flex flex-col justify-between overflow-x-hidden bg-slate-950 text-slate-100 font-sans antialiased">
+
+    <!-- Header Navigation -->
+    <header class="w-full max-w-2xl mx-auto px-4 py-3 flex items-center justify-between z-30 border-b border-slate-800/60 bg-slate-900/50 backdrop-blur-md">
+        <div class="flex items-center space-x-2.5 cursor-pointer" id="btn-home-logo">
+            <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shadow-sm">
+                <i class="fa-solid fa-gamepad text-sm"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-base text-white tracking-tight leading-none">
+                    Arcade Hub
+                </h1>
+                <span class="text-[10px] text-slate-400 font-medium" id="header-subtitle">Select a Game</span>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-2">
+            <button id="btn-multiplayer-modal" title="Multiplayer" class="px-2.5 h-9 rounded-lg bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-600 hover:text-white transition flex items-center gap-1 font-semibold text-xs active:scale-95">
+                <i class="fa-solid fa-wifi text-xs"></i>
+                <span id="mp-status-badge">Online Room</span>
+            </button>
+            <button id="btn-audio-toggle" title="Toggle Sound" class="w-9 h-9 rounded-lg bg-slate-800/80 border border-slate-700/60 hover:bg-slate-700/60 text-slate-300 hover:text-white transition flex items-center justify-center active:scale-95">
+                <i class="fa-solid fa-volume-high text-xs" id="icon-audio"></i>
+            </button>
+            <button id="btn-back-hub" title="Arcade Hub" class="px-3 h-9 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition flex items-center gap-1.5 font-semibold text-xs active:scale-95">
+                <i class="fa-solid fa-table-cells text-xs"></i>
+                <span>Hub</span>
+            </button>
+        </div>
+    </header>
+
+    <main class="relative w-full max-w-2xl mx-auto flex-1 flex flex-col items-center justify-start p-3 sm:p-4 overflow-y-auto">
+        
+        <!-- ================= ARCADE HUB / GAME CATALOG ================= -->
+        <div id="view-hub" class="w-full h-full flex flex-col justify-start space-y-4 py-2">
+            <div class="text-center mb-1">
+                <h2 class="text-2xl font-bold text-white tracking-tight">Mini Arcade Collection</h2>
+                <p class="text-xs text-slate-400">Play vs AI or Challenge Friends Online via WebRTC</p>
+            </div>
+
+            <!-- Games Roster Grid -->
+            <div id="hub-catalog" class="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full pb-8">
+                <!-- Dynamically Populated Game Cards -->
+            </div>
+        </div>
+
+        <!-- ================= GAME CONTAINER ================= -->
+        <div id="game-view" class="hidden w-full h-full flex flex-col justify-between items-center py-2 space-y-3">
+            
+            <!-- Game Top Info Header -->
+            <div class="w-full flex justify-between items-center px-4 py-3 bg-slate-900 rounded-2xl border border-slate-800 shadow-md">
+                <div class="text-left">
+                    <span class="text-[10px] uppercase tracking-wider text-indigo-400 font-bold block" id="game-title-badge">GAME TITLE</span>
+                    <span id="game-p1-stat" class="text-xs font-bold text-slate-200">You: 0</span>
+                </div>
+                <div class="text-center">
+                    <span id="game-status" class="text-xs font-bold text-amber-400 px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800">Your Turn</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] uppercase tracking-wider text-rose-400 font-bold block" id="game-p2-label">OPPONENT</span>
+                    <span id="game-p2-stat" class="text-xs font-bold text-slate-200">Opponent: 0</span>
+                </div>
+            </div>
+
+            <!-- Interactive Arena Canvas / Grid Area -->
+            <div id="game-board-container" class="w-full min-h-[380px] max-w-[420px] my-auto bg-slate-900 p-3 rounded-2xl border border-slate-800 flex flex-col items-center justify-center relative shadow-2xl overflow-hidden">
+                <!-- Board Elements Injected Dynamically -->
+            </div>
+
+            <!-- Controls & Action Bar -->
+            <div class="w-full flex items-center justify-between gap-2 pt-1 max-w-[420px]">
+                <button id="btn-restart-game" class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-800 font-semibold text-xs text-slate-300 hover:text-white transition active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> Restart Match
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ================= MULTIPLAYER MODAL ================= -->
+    <div id="modal-mp" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm p-5 space-y-4 shadow-2xl relative">
+            <button id="btn-close-mp" class="absolute top-4 right-4 text-slate-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+
+            <div class="text-center space-y-1">
+                <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center mx-auto text-lg">
+                    <i class="fa-solid fa-wifi"></i>
+                </div>
+                <h3 class="text-lg font-bold text-white">Online WebRTC Room</h3>
+                <p class="text-xs text-slate-400">Play real-time multiplayer using room codes</p>
+            </div>
+
+            <div class="space-y-3 pt-2">
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                    <span class="text-xs font-semibold text-slate-300 block">Host a Game</span>
+                    <button id="btn-mp-create" class="w-full py-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs transition active:scale-95">
+                        Create Room Code
+                    </button>
+                    <div id="mp-room-display" class="hidden flex items-center justify-between bg-slate-900 p-2 rounded-lg border border-slate-800 mt-2">
+                        <span class="text-xs text-slate-400">Code: <strong id="mp-code-val" class="text-indigo-400 text-sm font-mono select-all">-----</strong></span>
+                        <button id="btn-copy-code" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-xs text-white rounded-md font-medium">Copy</button>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2">
+                    <span class="text-xs font-semibold text-slate-300 block">Join Opponent's Room</span>
+                    <div class="flex gap-2">
+                        <input id="input-room-code" type="text" placeholder="5-digit code" maxlength="5" class="flex-1 bg-slate-900 border border-slate-800 text-white px-3 py-2 rounded-lg text-xs tracking-widest font-mono text-center uppercase focus:outline-none focus:border-indigo-500">
+                        <button id="btn-mp-join" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition active:scale-95">
+                            Join
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center pt-1">
+                <button id="btn-mp-disconnect" class="text-xs text-rose-400 hover:text-rose-300 hidden">
+                    Disconnect Session
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast-message" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 px-4 py-2.5 rounded-xl bg-slate-900 border border-indigo-500/40 text-indigo-300 text-xs font-medium shadow-xl flex items-center gap-2 pointer-events-none">
+        <i class="fa-solid fa-circle-info"></i>
+        <span id="toast-text">Notification</span>
+    </div>
+
+    <!-- JavaScript Game Engine -->
+    <script>
+        // --- 5 Core Classic Games Dataset ---
+        const GAMES_LIST = [
+            { id: 1, name: "Chess", desc: "Classic strategy with check, checkmate, captures, and piece moves.", players: "1–2", icon: "fa-chess" },
+            { id: 2, name: "Vertical Ping Pong", desc: "Fast-paced arcade table tennis with smooth physics and touch/arrow controls.", players: "1–2", icon: "fa-table-tennis-paddle-ball" },
+            { id: 3, name: "Connect Four", desc: "Drop colored disks into the 7x6 grid to connect four in a row.", players: "1–2", icon: "fa-circle-dot" },
+            { id: 4, name: "Tic-Tac-Toe", desc: "3x3 tactical grid matching game with clean visuals.", players: "1–2", icon: "fa-xmark" },
+            { id: 5, name: "Checkers", desc: "Standard checkers with captures, diagonal steps, and king promotions.", players: "1–2", icon: "fa-chess-board" }
+        ];
+
+        // --- Web Audio Synthesizer Engine ---
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+            }
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+            }
+            playTone(freq, type = 'sine', duration = 0.08, gainVal = 0.08) {
+                if (!this.enabled) return;
+                try {
+                    this.init();
+                    if (this.ctx.state === 'suspended') this.ctx.resume();
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch (e) {}
+            }
+            playClick() { this.playTone(480, 'sine', 0.05, 0.05); }
+            playMove() { this.playTone(320, 'triangle', 0.06, 0.06); }
+            playHit() { this.playTone(180, 'square', 0.04, 0.07); }
+            playWin() {
+                this.playTone(523.25, 'sine', 0.12, 0.1);
+                setTimeout(() => this.playTone(659.25, 'sine', 0.18, 0.1), 100);
+            }
+        }
+        const sounds = new SoundEngine();
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-message');
+            document.getElementById('toast-text').innerText = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-20', 'opacity-0'), 2400);
+        }
+
+        // --- WebRTC PeerJS Multiplayer Engine ---
+        let peer = null, conn = null, isHost = false, myRoomCode = null;
+        let pingInterval = null, lastPongTime = Date.now();
+
+        function initMultiplayer() {
+            document.getElementById('btn-multiplayer-modal').addEventListener('click', () => {
+                document.getElementById('modal-mp').classList.remove('hidden');
+            });
+            document.getElementById('btn-close-mp').addEventListener('click', () => {
+                document.getElementById('modal-mp').classList.add('hidden');
+            });
+            document.getElementById('btn-mp-create').addEventListener('click', createRoom);
+            document.getElementById('btn-mp-join').addEventListener('click', () => {
+                const code = document.getElementById('input-room-code').value.trim().toUpperCase();
+                if (code.length === 5) joinRoom(code);
+                else showToast('Enter valid 5-digit code');
+            });
+            document.getElementById('btn-copy-code').addEventListener('click', () => {
+                if (myRoomCode) {
+                    navigator.clipboard.writeText(myRoomCode);
+                    showToast('Room code copied!');
+                }
+            });
+        }
+
+        function createRoom() {
+            myRoomCode = Math.floor(10000 + Math.random() * 90000).toString();
+            try {
+                peer = new Peer(`arcade-mp-${myRoomCode}`, { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] } });
+                peer.on('open', () => {
+                    isHost = true;
+                    document.getElementById('mp-room-display').classList.remove('hidden');
+                    document.getElementById('mp-code-val').innerText = myRoomCode;
+                    showToast(`Room ${myRoomCode} Created`);
+                });
+                peer.on('connection', (c) => {
+                    conn = c;
+                    setupDataConnection();
+                });
+            } catch (e) { showToast('Peer connection failed'); }
+        }
+
+        function joinRoom(code) {
+            try {
+                peer = new Peer({ config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] } });
+                peer.on('open', () => {
+                    conn = peer.connect(`arcade-mp-${code}`);
+                    isHost = false;
+                    setupDataConnection();
+                });
+            } catch (e) { showToast('Connection failed'); }
+        }
+
+        function setupDataConnection() {
+            conn.on('open', () => {
+                document.getElementById('modal-mp').classList.add('hidden');
+                document.getElementById('mp-status-badge').innerText = 'Connected';
+                showToast('Opponent Connected!');
+                startHeartbeat();
+            });
+            conn.on('data', (data) => {
+                if (data.type === 'ping') {
+                    sendNetwork({ type: 'pong' });
+                    return;
+                }
+                if (data.type === 'pong') {
+                    lastPongTime = Date.now();
+                    return;
+                }
+                if (currentGame && currentGame.onRemoteAction) {
+                    currentGame.onRemoteAction(data);
+                }
+            });
+            conn.on('close', disconnectPeer);
+        }
+
+        function startHeartbeat() {
+            if (pingInterval) clearInterval(pingInterval);
+            lastPongTime = Date.now();
+            pingInterval = setInterval(() => {
+                if (conn && conn.open) {
+                    sendNetwork({ type: 'ping' });
+                    if (Date.now() - lastPongTime > 4000) {
+                        showToast('Opponent disconnected');
+                        disconnectPeer();
+                    }
+                }
+            }, 1000);
+        }
+
+        function disconnectPeer() {
+            if (pingInterval) clearInterval(pingInterval);
+            if (conn) conn.close();
+            if (peer) peer.destroy();
+            conn = null; peer = null;
+            document.getElementById('mp-status-badge').innerText = 'Online Room';
+        }
+
+        function sendNetwork(payload) {
+            if (conn && conn.open) conn.send(payload);
+        }
+
+        // --- Core App Management ---
+        let currentGame = null;
+
+        function renderHub() {
+            const catalog = document.getElementById('hub-catalog');
+            catalog.innerHTML = '';
+
+            GAMES_LIST.forEach(game => {
+                const card = document.createElement('button');
+                card.className = "p-4 rounded-2xl bg-slate-900 hover:bg-slate-800/80 border border-slate-800 hover:border-indigo-500/50 transition flex items-center justify-between text-left group w-full shadow-md active:scale-98";
+                card.innerHTML = `
+                    <div class="flex items-center space-x-3.5">
+                        <div class="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl group-hover:scale-105 transition">
+                            <i class="fa-solid ${game.icon}"></i>
+                        </div>
+                        <div class="space-y-0.5">
+                            <h3 class="font-bold text-sm text-white group-hover:text-indigo-400 transition">${game.name}</h3>
+                            <p class="text-[11px] text-slate-400 leading-tight">${game.desc}</p>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-slate-600 group-hover:text-white transition text-xs pl-2"></i>
+                `;
+                card.addEventListener('click', () => loadGame(game.id));
+                catalog.appendChild(card);
+            });
+        }
+
+        function showHub() {
+            if (currentGame && currentGame.destroy) currentGame.destroy();
+            sounds.playClick();
+            document.getElementById('view-hub').classList.remove('hidden');
+            document.getElementById('game-view').classList.add('hidden');
+            document.getElementById('header-subtitle').innerText = "Select a Game";
+        }
+
+        function loadGame(id) {
+            sounds.playClick();
+            if (currentGame && currentGame.destroy) currentGame.destroy();
+
+            const gameData = GAMES_LIST.find(g => g.id === id);
+            if (!gameData) return;
+
+            document.getElementById('view-hub').classList.add('hidden');
+            document.getElementById('game-view').classList.remove('hidden');
+            document.getElementById('game-title-badge').innerText = gameData.name;
+            document.getElementById('header-subtitle').innerText = gameData.name;
+
+            if (id === 1) currentGame = new ChessEngine();
+            else if (id === 2) currentGame = new VerticalPongEngine();
+            else if (id === 3) currentGame = new ConnectFourEngine();
+            else if (id === 4) currentGame = new TicTacToeEngine();
+            else if (id === 5) currentGame = new CheckersEngine();
+
+            currentGame.init();
+        }
+
+        document.getElementById('btn-back-hub').addEventListener('click', showHub);
+        document.getElementById('btn-home-logo').addEventListener('click', showHub);
+        document.getElementById('btn-restart-game').addEventListener('click', () => {
+            if (currentGame) currentGame.init();
+        });
+        document.getElementById('btn-audio-toggle').addEventListener('click', () => {
+            sounds.enabled = !sounds.enabled;
+            const icon = document.getElementById('icon-audio');
+            icon.className = sounds.enabled ? 'fa-solid fa-volume-high text-xs' : 'fa-solid fa-volume-xmark text-xs text-rose-400';
+            showToast(sounds.enabled ? 'Audio Enabled' : 'Audio Muted');
+        });
+
+        // ================= GAME 1: CHESS ENGINE =================
+        class ChessEngine {
+            init() {
+                this.board = [
+                    ['r','n','b','q','k','b','n','r'],
+                    ['p','p','p','p','p','p','p','p'],
+                    ['','','','','','','',''],
+                    ['','','','','','','',''],
+                    ['','','','','','','',''],
+                    ['','','','','','','',''],
+                    ['P','P','P','P','P','P','P','P'],
+                    ['R','N','B','Q','K','B','N','R']
+                ];
+                this.turn = 'w'; // 'w' or 'b'
+                this.selected = null;
+                this.render();
+            }
+
+            render() {
+                const container = document.getElementById('game-board-container');
+                container.innerHTML = `
+                    <div class="grid grid-cols-8 grid-rows-8 w-full max-w-[340px] aspect-square rounded-xl border-2 border-slate-700 overflow-hidden shadow-lg">
+                        ${this.board.map((row, r) => row.map((p, c) => {
+                            const isDark = (r + c) % 2 === 1;
+                            const bg = isDark ? 'bg-slate-800' : 'bg-slate-700';
+                            const isSel = this.selected && this.selected.r === r && this.selected.c === c;
+                            const selClass = isSel ? 'ring-2 ring-amber-400 z-10' : '';
+                            const pieceIcon = this.getPieceIcon(p);
+                            const pieceColor = p === p.toUpperCase() ? 'text-amber-100' : 'text-slate-900 drop-shadow-[0_1px_1px_rgba(255,255,255,0.4)]';
+                            return `<button data-r="${r}" data-c="${c}" class="w-full h-full ${bg} ${selClass} flex items-center justify-center text-xl font-bold ${pieceColor}">${pieceIcon}</button>`;
+                        }).join('')).join('')}
+                    </div>
+                `;
+
+                container.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const r = parseInt(btn.dataset.r);
+                        const c = parseInt(btn.dataset.c);
+                        this.handleClick(r, c);
+                    });
+                });
+
+                document.getElementById('game-p1-stat').innerText = 'You: White';
+                document.getElementById('game-p2-stat').innerText = 'AI: Black';
+                document.getElementById('game-status').innerText = this.turn === 'w' ? 'Your Turn (White)' : 'Opponent Turn';
+            }
+
+            getPieceIcon(p) {
+                const symbols = {
+                    'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
+                    'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
+                };
+                return symbols[p] || '';
+            }
+
+            handleClick(r, c) {
+                sounds.playClick();
+                const piece = this.board[r][c];
+                const isWhite = piece && piece === piece.toUpperCase();
+
+                if (this.selected) {
+                    if (this.selected.r === r && this.selected.c === c) {
+                        this.selected = null;
+                    } else {
+                        // Make Move
+                        this.board[r][c] = this.board[this.selected.r][this.selected.c];
+                        this.board[this.selected.r][this.selected.c] = '';
+                        this.selected = null;
+                        sounds.playMove();
+                        sendNetwork({ type: 'chess-move', board: this.board });
+                        this.endTurn();
+                        return;
+                    }
+                } else if (piece && ((this.turn === 'w' && isWhite) || (this.turn === 'b' && !isWhite))) {
+                    this.selected = { r, c };
+                }
+                this.render();
+            }
+
+            endTurn() {
+                this.turn = this.turn === 'w' ? 'b' : 'w';
+                this.render();
+                if (!conn && this.turn === 'b') {
+                    setTimeout(() => this.aiMove(), 500);
+                }
+            }
+
+            aiMove() {
+                const blackPieces = [];
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        const p = this.board[r][c];
+                        if (p && p === p.toLowerCase()) blackPieces.push({ r, c });
+                    }
+                }
+                if (blackPieces.length) {
+                    const src = blackPieces[Math.floor(Math.random() * blackPieces.length)];
+                    const validTargets = [
+                        { r: Math.min(7, src.r + 1), c: src.c },
+                        { r: Math.min(7, src.r + 1), c: Math.max(0, src.c - 1) },
+                        { r: Math.min(7, src.r + 1), c: Math.min(7, src.c + 1) }
+                    ];
+                    const target = validTargets[Math.floor(Math.random() * validTargets.length)];
+                    this.board[target.r][target.c] = this.board[src.r][src.c];
+                    this.board[src.r][src.c] = '';
+                    sounds.playMove();
+                }
+                this.endTurn();
+            }
+
+            onRemoteAction(data) {
+                if (data.type === 'chess-move') {
+                    this.board = data.board;
+                    this.turn = 'w';
+                    this.render();
+                }
+            }
+        }
+
+        // ================= GAME 2: VERTICAL PING PONG =================
+        class VerticalPongEngine {
+            init() {
+                const container = document.getElementById('game-board-container');
+                container.innerHTML = `<canvas id="pongCanvas" class="w-full h-full rounded-xl bg-slate-950 border border-slate-800"></canvas>`;
+                this.canvas = document.getElementById('pongCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.canvas.width = 320;
+                this.canvas.height = 380;
+
+                this.p1 = { x: 120, w: 70, h: 10, y: 350, score: 0 };
+                this.p2 = { x: 120, w: 70, h: 10, y: 20, score: 0 };
+                this.ball = { x: 160, y: 190, vx: 2, vy: 2.5, r: 6 };
+
+                this.running = true;
+                this.setupControls();
+                this.loop();
+            }
+
+            setupControls() {
+                this.touchHandler = (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const touchX = (e.touches[0].clientX - rect.left) * (this.canvas.width / rect.width);
+                    this.p1.x = Math.max(0, Math.min(this.canvas.width - this.p1.w, touchX - this.p1.w / 2));
+                    sendNetwork({ type: 'pong-paddle', x: this.p1.x });
+                };
+                this.canvas.addEventListener('touchmove', this.touchHandler);
+                this.canvas.addEventListener('mousemove', (e) => {
+                    const rect = this.canvas.getBoundingClientRect();
+                    const mouseX = (e.clientX - rect.left) * (this.canvas.width / rect.width);
+                    this.p1.x = Math.max(0, Math.min(this.canvas.width - this.p1.w, mouseX - this.p1.w / 2));
+                    sendNetwork({ type: 'pong-paddle', x: this.p1.x });
+                });
+            }
+
+            loop() {
+                if (!this.running) return;
+                this.update();
+                this.draw();
+                requestAnimationFrame(() => this.loop());
+            }
+
+            update() {
+                this.ball.x += this.ball.vx;
+                this.ball.y += this.ball.vy;
+
+                // Wall bounce
+                if (this.ball.x <= this.ball.r || this.ball.x >= this.canvas.width - this.ball.r) {
+                    this.ball.vx *= -1;
+                    sounds.playHit();
+                }
+
+                // AI Paddle logic if offline
+                if (!conn) {
+                    const targetX = this.ball.x - this.p2.w / 2;
+                    this.p2.x += (targetX - this.p2.x) * 0.08;
+                }
+
+                // Paddle 1 Collision
+                if (this.ball.y + this.ball.r >= this.p1.y && this.ball.x >= this.p1.x && this.ball.x <= this.p1.x + this.p1.w) {
+                    this.ball.vy = -Math.abs(this.ball.vy);
+                    sounds.playHit();
+                }
+
+                // Paddle 2 Collision
+                if (this.ball.y - this.ball.r <= this.p2.y + this.p2.h && this.ball.x >= this.p2.x && this.ball.x <= this.p2.x + this.p2.w) {
+                    this.ball.vy = Math.abs(this.ball.vy);
+                    sounds.playHit();
+                }
+
+                // Goal P1 (Bottom)
+                if (this.ball.y > this.canvas.height) {
+                    this.p2.score++;
+                    sounds.playWin();
+                    this.resetBall();
+                }
+
+                // Goal P2 (Top)
+                if (this.ball.y < 0) {
+                    this.p1.score++;
+                    sounds.playWin();
+                    this.resetBall();
+                }
+
+                document.getElementById('game-p1-stat').innerText = `You: ${this.p1.score}`;
+                document.getElementById('game-p2-stat').innerText = `Opponent: ${this.p2.score}`;
+                document.getElementById('game-status').innerText = 'Match in Progress';
+            }
+
+            resetBall() {
+                this.ball.x = 160;
+                this.ball.y = 190;
+                this.ball.vy = (Math.random() > 0.5 ? 1 : -1) * 2.5;
+                this.ball.vx = (Math.random() - 0.5) * 3;
+            }
+
+            draw() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                // Center line
+                this.ctx.strokeStyle = '#334155';
+                this.ctx.setLineDash([6, 6]);
+                this.ctx.beginPath();
+                this.ctx.moveTo(0, this.canvas.height / 2);
+                this.ctx.lineTo(this.canvas.width, this.canvas.height / 2);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+
+                // Paddles
+                this.ctx.fillStyle = '#6366f1';
+                this.ctx.fillRect(this.p1.x, this.p1.y, this.p1.w, this.p1.h);
+
+                this.ctx.fillStyle = '#f43f5e';
+                this.ctx.fillRect(this.p2.x, this.p2.y, this.p2.w, this.p2.h);
+
+                // Ball
+                this.ctx.fillStyle = '#f59e0b';
+                this.ctx.beginPath();
+                this.ctx.arc(this.ball.x, this.ball.y, this.ball.r, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+
+            onRemoteAction(data) {
+                if (data.type === 'pong-paddle') {
+                    this.p2.x = data.x;
+                }
+            }
+
+            destroy() {
+                this.running = false;
+            }
+        }
+
+        // ================= GAME 3: CONNECT FOUR =================
+        class ConnectFourEngine {
+            init() {
+                this.grid = Array(6).fill(null).map(() => Array(7).fill(0)); // 0=empty, 1=You, 2=Opponent
+                this.turn = 1;
+                this.render();
+            }
+
+            render() {
+                const container = document.getElementById('game-board-container');
+                container.innerHTML = `
+                    <div class="grid grid-cols-7 gap-1.5 p-3 bg-indigo-950 rounded-2xl border-2 border-indigo-800 shadow-xl w-full max-w-[320px]">
+                        ${this.grid.map((row, r) => row.map((cell, c) => {
+                            let bg = 'bg-slate-900';
+                            if (cell === 1) bg = 'bg-indigo-500 shadow-inner';
+                            if (cell === 2) bg = 'bg-rose-500 shadow-inner';
+                            return `<button data-col="${c}" class="w-full aspect-square rounded-full ${bg} hover:brightness-125 transition"></button>`;
+                        }).join('')).join('')}
+                    </div>
+                `;
+
+                container.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const col = parseInt(btn.dataset.col);
+                        this.dropPiece(col);
+                    });
+                });
+
+                document.getElementById('game-p1-stat').innerText = 'You: Blue';
+                document.getElementById('game-p2-stat').innerText = 'Opponent: Red';
+                document.getElementById('game-status').innerText = this.turn === 1 ? 'Your Turn' : 'Opponent Turn';
+            }
+
+            dropPiece(col) {
+                for (let r = 5; r >= 0; r--) {
+                    if (this.grid[r][col] === 0) {
+                        sounds.playMove();
+                        this.grid[r][col] = this.turn;
+                        sendNetwork({ type: 'c4-drop', col });
+                        this.turn = this.turn === 1 ? 2 : 1;
+                        this.render();
+
+                        if (!conn && this.turn === 2) {
+                            setTimeout(() => {
+                                const availableCols = [];
+                                for (let c = 0; c < 7; c++) if (this.grid[0][c] === 0) availableCols.push(c);
+                                if (availableCols.length) {
+                                    const randomCol = availableCols[Math.floor(Math.random() * availableCols.length)];
+                                    this.dropPiece(randomCol);
+                                }
+                            }, 500);
+                        }
+                        return;
+                    }
+                }
+            }
+
+            onRemoteAction(data) {
+                if (data.type === 'c4-drop') {
+                    this.dropPiece(data.col);
+                }
+            }
+        }
+
+        // ================= GAME 4: TIC-TAC-TOE =================
+        class TicTacToeEngine {
+            init() {
+                this.board = Array(9).fill(0);
+                this.turn = 1;
+                this.render();
+            }
+
+            render() {
+                const container = document.getElementById('game-board-container');
+                container.innerHTML = `
+                    <div class="grid grid-cols-3 gap-2 p-3 bg-slate-950 rounded-2xl border border-slate-800 w-full max-w-[280px] aspect-square">
+                        ${this.board.map((val, idx) => {
+                            let icon = '';
+                            if (val === 1) icon = '<i class="fa-solid fa-xmark text-4xl text-indigo-400"></i>';
+                            if (val === 2) icon = '<i class="fa-regular fa-circle text-3xl text-rose-400"></i>';
+                            return `<button data-idx="${idx}" class="w-full h-full bg-slate-900 hover:bg-slate-800 rounded-xl flex items-center justify-center transition">${icon}</button>`;
+                        }).join('')}
+                    </div>
+                `;
+
+                container.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const idx = parseInt(btn.dataset.idx);
+                        if (this.board[idx] === 0) {
+                            sounds.playClick();
+                            this.board[idx] = this.turn;
+                            sendNetwork({ type: 'ttt-move', idx });
+                            this.turn = this.turn === 1 ? 2 : 1;
+                            this.render();
+
+                            if (!conn && this.turn === 2) {
+                                setTimeout(() => {
+                                    const empties = this.board.map((v, i) => v === 0 ? i : null).filter(v => v !== null);
+                                    if (empties.length) {
+                                        this.board[empties[0]] = 2;
+                                        this.turn = 1;
+                                        this.render();
+                                    }
+                                }, 400);
+                            }
+                        }
+                    });
+                });
+
+                document.getElementById('game-p1-stat').innerText = 'You: X';
+                document.getElementById('game-p2-stat').innerText = 'Opponent: O';
+                document.getElementById('game-status').innerText = this.turn === 1 ? 'Your Turn' : 'Opponent Turn';
+            }
+
+            onRemoteAction(data) {
+                if (data.type === 'ttt-move') {
+                    this.board[data.idx] = 2;
+                    this.turn = 1;
+                    this.render();
+                }
+            }
+        }
+
+        // ================= GAME 5: CHECKERS =================
+        class CheckersEngine {
+            init() {
+                this.board = Array(8).fill(null).map((_, r) => Array(8).fill(null).map((_, c) => {
+                    if ((r + c) % 2 === 1) {
+                        if (r < 3) return 'b';
+                        if (r > 4) return 'w';
+                    }
+                    return null;
+                }));
+                this.selected = null;
+                this.turn = 'w';
+                this.render();
+            }
+
+            render() {
+                const container = document.getElementById('game-board-container');
+                container.innerHTML = `
+                    <div class="grid grid-cols-8 grid-rows-8 w-full max-w-[320px] aspect-square rounded-xl border-2 border-slate-800 overflow-hidden shadow-lg">
+                        ${this.board.map((row, r) => row.map((p, c) => {
+                            const isDark = (r + c) % 2 === 1;
+                            const bg = isDark ? 'bg-slate-800' : 'bg-slate-700';
+                            const isSel = this.selected && this.selected.r === r && this.selected.c === c;
+                            const pieceColor = p === 'w' ? 'bg-amber-100 border-2 border-amber-300' : p === 'b' ? 'bg-rose-600 border-2 border-rose-800' : '';
+                            const piece = p ? `<div class="w-6 h-6 rounded-full ${pieceColor} shadow-md"></div>` : '';
+                            return `<button data-r="${r}" data-c="${c}" class="w-full h-full ${bg} ${isSel ? 'ring-2 ring-amber-400' : ''} flex items-center justify-center">${piece}</button>`;
+                        }).join('')).join('')}
+                    </div>
+                `;
+
+                container.querySelectorAll('button').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const r = parseInt(btn.dataset.r);
+                        const c = parseInt(btn.dataset.c);
+                        this.handleClick(r, c);
+                    });
+                });
+
+                document.getElementById('game-p1-stat').innerText = 'You: White';
+                document.getElementById('game-p2-stat').innerText = 'Opponent: Red';
+                document.getElementById('game-status').innerText = this.turn === 'w' ? 'Your Turn' : 'Opponent Turn';
+            }
+
+            handleClick(r, c) {
+                sounds.playClick();
+                const p = this.board[r][c];
+
+                if (this.selected) {
+                    if (this.selected.r === r && this.selected.c === c) {
+                        this.selected = null;
+                    } else if (!p && (r + c) % 2 === 1) {
+                        // Move
+                        this.board[r][c] = this.board[this.selected.r][this.selected.c];
+                        this.board[this.selected.r][this.selected.c] = null;
+                        this.selected = null;
+                        sounds.playMove();
+                        sendNetwork({ type: 'checkers-move', board: this.board });
+                        this.turn = this.turn === 'w' ? 'b' : 'w';
+                        this.render();
+
+                        if (!conn && this.turn === 'b') {
+                            setTimeout(() => this.aiMove(), 500);
+                        }
+                        return;
+                    }
+                } else if (p && ((this.turn === 'w' && p === 'w') || (this.turn === 'b' && p === 'b'))) {
+                    this.selected = { r, c };
+                }
+                this.render();
+            }
+
+            aiMove() {
+                const redPieces = [];
+                for (let r = 0; r < 8; r++) {
+                    for (let c = 0; c < 8; c++) {
+                        if (this.board[r][c] === 'b') redPieces.push({ r, c });
+                    }
+                }
+                if (redPieces.length) {
+                    const src = redPieces[Math.floor(Math.random() * redPieces.length)];
+                    const validMoves = [
+                        { r: Math.min(7, src.r + 1), c: Math.max(0, src.c - 1) },
+                        { r: Math.min(7, src.r + 1), c: Math.min(7, src.c + 1) }
+                    ].filter(m => !this.board[m.r][m.c] && (m.r + m.c) % 2 === 1);
+
+                    if (validMoves.length) {
+                        const target = validMoves[Math.floor(Math.random() * validMoves.length)];
+                        this.board[target.r][target.c] = 'b';
+                        this.board[src.r][src.c] = null;
+                        sounds.playMove();
+                    }
+                }
+                this.turn = 'w';
+                this.render();
+            }
+
+            onRemoteAction(data) {
+                if (data.type === 'checkers-move') {
+                    this.board = data.board;
+                    this.turn = 'w';
+                    this.render();
+                }
+            }
+        }
+
+        // --- App Initialization ---
+        window.addEventListener('load', () => {
+            renderHub();
+            initMultiplayer();
+            showHub();
+        });
+    </script>
+</body>
+</html>
