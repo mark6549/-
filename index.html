@@ -2,166 +2,74 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Peer Pong — Multiplayer</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Peer Pong</title>
 <style>
-:root{color-scheme:dark;--bg:#0a1020;--panel:#111b30;--line:#263957;--text:#edf4ff;--muted:#94a7c5;--accent:#72f2c4;--blue:#7da9ff;--danger:#ff7b8b}
-*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at top,#172745 0,#0a1020 58%);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);display:flex;justify-content:center;padding:22px}
-main{width:min(100%,1000px)}header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}h1{font-size:clamp(1.5rem,4vw,2.3rem);margin:0;letter-spacing:-.05em}h1 span{color:var(--accent)}.tag{font-size:.75rem;color:var(--accent);border:1px solid #315e5a;padding:5px 9px;border-radius:999px;white-space:nowrap}
-.panel{background:rgba(17,27,48,.92);border:1px solid var(--line);border-radius:18px;padding:clamp(15px,3vw,25px);box-shadow:0 18px 60px #0003}
-#lobby{display:grid;grid-template-columns:1fr 1fr;gap:14px}.choice{border:1px solid var(--line);border-radius:14px;padding:18px;min-width:0}.choice h2{font-size:1.1rem;margin:0 0 5px}.choice p,.hint{color:var(--muted);font-size:.9rem;margin:0 0 14px}
-label{display:block;font-size:.85rem;color:var(--muted);margin:12px 0 6px}input{width:100%;background:#091225;border:1px solid #344666;color:var(--text);padding:12px 13px;border-radius:10px;font:inherit;outline:none}input:focus{border-color:var(--accent)}
-button{border:0;border-radius:10px;padding:11px 15px;font:600 .95rem system-ui;cursor:pointer;transition:transform .12s,filter .12s}button:hover{filter:brightness(1.08)}button:active{transform:scale(.98)}button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--accent);color:#06251c;width:100%;margin-top:12px}.secondary{background:#20324f;color:var(--text);border:1px solid #344666}.row{display:flex;gap:8px}.row>*{min-width:0}.row input{flex:1}
-#status{margin:14px 0 0;padding:11px 13px;background:#0a1427;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:.9rem}#status.good{color:var(--accent)}#status.bad{color:var(--danger)}
-#gamePanel{display:none}.gamehead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}.scoreboard{display:flex;align-items:center;gap:15px;font-size:1.3rem;font-weight:750}.scoreboard .num{font-variant-numeric:tabular-nums;font-size:2rem}.scoreboard .dash{color:var(--muted)}.playerlabel{font-size:.75rem;font-weight:500;color:var(--muted);display:block}
-#canvasWrap{position:relative;border:1px solid #344666;border-radius:14px;overflow:hidden;background:#080f1e}canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none}
-.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;background:#071020b8;backdrop-filter:blur(3px)}.overlay.hidden{display:none}.overlaybox{max-width:380px}.overlay h2{margin:0 0 6px;font-size:1.5rem}.overlay p{margin:0 0 14px;color:#b4c3da}.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:13px}.controls small{color:var(--muted)}.touchcontrols{display:none;gap:10px}.touchcontrols button{width:74px;height:54px;font-size:1.3rem}
-#roomCode{font-weight:750;letter-spacing:.1em;color:var(--accent)}.hidden{display:none!important}
-footer{color:#7185a6;font-size:.8rem;text-align:center;margin-top:18px}
-@media(max-width:650px){body{padding:13px}#lobby{grid-template-columns:1fr}.gamehead{align-items:flex-start}.touchcontrols{display:flex}.controls{align-items:flex-start}.choice{padding:15px}}
+:root{color-scheme:dark;--bg:#050d1b;--panel:#0b1930;--line:#183a61;--blue:#079cff;--cyan:#26d8ff;--pink:#ff398b;--green:#31edac;--text:#f2f8ff;--muted:#91a9c8}
+*{box-sizing:border-box}body{margin:0;min-height:100dvh;background:radial-gradient(ellipse at 50% -10%,#12335b 0,transparent 55%),var(--bg);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;color:var(--text);padding:16px;display:flex;justify-content:center}main{width:min(100%,560px)}header{display:flex;justify-content:space-between;align-items:center;margin:5px 0 22px}h1{font-size:1.55rem;letter-spacing:-.06em;margin:0;font-weight:850}h1 span{color:var(--cyan)}.pill{font-size:.72rem;border:1px solid #20527b;color:var(--cyan);padding:5px 9px;border-radius:99px}
+.card{background:linear-gradient(145deg,#0d1e37,#071326);border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:0 18px 55px #0005}.hero{text-align:center;padding:12px 0 22px}.logo{font-size:3.2rem;line-height:1.3;filter:drop-shadow(0 0 15px #009cff66)}.hero h2{font-size:2.1rem;margin:0;letter-spacing:-.06em}.hero h2 em{font-style:normal;color:var(--cyan)}.sub{color:var(--muted);font-size:.9rem;margin:8px 0 0}
+button,input{font:inherit}button{cursor:pointer;border:0;border-radius:13px;min-height:48px;padding:12px 15px;font-weight:750;color:white;background:#122b49}button:disabled{opacity:.5;cursor:wait}.primary{width:100%;background:linear-gradient(110deg,#078bff,#0068f4);box-shadow:0 7px 22px #007bff2b}.secondary{border:1px solid #21527a;background:#0a1c32}.choice{padding:15px 0;border-top:1px solid #193451}.choice h3{font-size:1rem;margin:0 0 4px}.choice p{font-size:.85rem;color:var(--muted);margin:0 0 12px}.row{display:flex;gap:9px}.row input{min-width:0;flex:1}input{width:100%;border:1px solid #254a70;border-radius:12px;background:#061123;color:var(--text);padding:13px;outline:none;text-transform:uppercase}input:focus{border-color:var(--cyan)}#status{margin-top:15px;padding:12px;border-radius:12px;background:#071427;border:1px solid #183654;color:var(--muted);font-size:.84rem;overflow-wrap:anywhere}#status.good{color:var(--green)}#status.bad{color:#ff8caa}
+#gameView{display:none}.gameTop{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px}.score{display:flex;align-items:center;gap:13px;font-size:2rem;font-weight:850}.score small{display:block;font-size:.68rem;color:var(--muted);font-weight:600;text-align:center}.score .a{color:var(--cyan)}.score .b{color:var(--pink)}.codeLine{font-size:.82rem;color:var(--muted);margin:0 0 12px}.codeLine strong{color:var(--green);letter-spacing:.1em}.court{position:relative;border:1px solid #14517b;border-radius:16px;overflow:hidden;background:#06152b;box-shadow:inset 0 0 30px #006dff14}canvas{display:block;width:100%;height:auto;aspect-ratio:4/5;touch-action:none}.overlay{position:absolute;inset:0;background:#041020d9;display:flex;align-items:center;justify-content:center;text-align:center;padding:22px}.overlay.hidden{display:none}.overlayInner{max-width:290px}.overlay h2{font-size:1.5rem;margin:0 0 7px}.overlay p{color:#b0c4df;font-size:.9rem;margin:0 0 16px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px}.control{min-height:68px;font-size:1.4rem;border:1px solid #17649a;background:linear-gradient(#0c2d4c,#081b31);touch-action:none}.control:first-child{color:var(--cyan)}.control:last-child{color:var(--pink)}.foot{font-size:.76rem;color:#7892b4;text-align:center;margin:17px 0}.hidden{display:none!important}
+@media(min-width:480px){canvas{aspect-ratio:16/10}.controls{grid-template-columns:1fr 1fr}.card{padding:24px}}
 </style>
 </head>
 <body>
 <main>
-<header><h1>PEER<span>/</span>PONG</h1><div class="tag">REAL-TIME · 1v1</div></header>
-<section class="panel" id="lobby">
-  <div class="choice">
-    <h2>Host a lobby</h2><p>Create a room and send your friend the code.</p>
-    <button class="primary" id="hostBtn">Create lobby</button>
-  </div>
-  <div class="choice">
-    <h2>Join a lobby</h2><p>Enter the room code shared by the host.</p>
-    <label for="joinCode">Lobby code</label>
-    <div class="row"><input id="joinCode" maxlength="32" placeholder="e.g. MINT-482" autocomplete="off"><button class="secondary" id="joinBtn">Join</button></div>
-  </div>
-  <div id="status" role="status" aria-live="polite" style="grid-column:1/-1">Ready. Create a lobby or join a friend's code.</div>
+<header><h1>PEER<span>/</span>PONG</h1><span class="pill">1 VS 1 · ONLINE</span></header>
+<section class="card" id="homeView">
+<div class="hero"><div class="logo">🏓</div><h2>Ping <em>Pong</em></h2><p class="sub">A tiny arena. You and a friend.</p></div>
+<div class="choice"><h3>Create a lobby</h3><p>Make a room code and share it with your opponent.</p><button id="hostBtn" class="primary">＋ &nbsp; Create lobby</button></div>
+<div class="choice"><h3>Join a lobby</h3><p>Enter the host's room code to connect.</p><div class="row"><input id="joinInput" maxlength="6" placeholder="6-LETTER CODE" autocomplete="off" autocapitalize="characters"><button id="joinBtn" class="secondary">Join</button></div></div>
+<div id="status" role="status" aria-live="polite">Ready when you are. Both players need an internet connection.</div>
 </section>
-
-<section class="panel" id="gamePanel">
-  <div class="gamehead">
-    <div class="scoreboard"><div><span class="playerlabel" id="leftName">YOU</span><span class="num" id="leftScore">0</span></div><span class="dash">:</span><div><span class="playerlabel" id="rightName">OPPONENT</span><span class="num" id="rightScore">0</span></div></div>
-    <div class="row"><button class="secondary" id="copyBtn">Copy code</button><button class="secondary" id="leaveBtn">Leave</button></div>
-  </div>
-  <div class="hint">Lobby code: <span id="roomCode">—</span> · First to 7 points</div>
-  <div id="canvasWrap">
-    <canvas id="game" width="960" height="540" aria-label="Pong game"></canvas>
-    <div class="overlay" id="overlay"><div class="overlaybox"><h2 id="overlayTitle">Waiting for player</h2><p id="overlayText">Share your lobby code to get started.</p><button class="primary" id="startBtn">Start match</button></div></div>
-  </div>
-  <div class="controls"><small>Move with <b>W/S</b> or <b>↑/↓</b>. On mobile, use the buttons.</small><div class="touchcontrols"><button class="secondary" id="upBtn" aria-label="Move paddle up">▲</button><button class="secondary" id="downBtn" aria-label="Move paddle down">▼</button></div></div>
+<section class="card" id="gameView">
+<div class="gameTop"><div class="score"><div><small id="leftLabel">YOU</small><span class="a" id="scoreA">0</span></div><span style="color:#54708f">:</span><div><small id="rightLabel">FRIEND</small><span class="b" id="scoreB">0</span></div></div><button id="leaveBtn" class="secondary">Exit</button></div>
+<p class="codeLine">ROOM CODE: <strong id="roomCode">------</strong> <button id="copyBtn" class="secondary" style="min-height:32px;padding:4px 9px;font-size:.75rem;margin-left:5px">Copy</button></p>
+<div class="court"><canvas id="canvas" width="480" height="600"></canvas><div class="overlay" id="overlay"><div class="overlayInner"><h2 id="overlayTitle">Waiting for player</h2><p id="overlayText">Share the room code with your friend.</p><button id="overlayBtn" class="primary">Start match</button></div></div></div>
+<div class="controls"><button class="control" id="upBtn" aria-label="Move paddle up">▲</button><button class="control" id="downBtn" aria-label="Move paddle down">▼</button></div>
+<p class="foot">First to 7 points wins · Desktop: W/S or ↑/↓</p>
 </section>
-<footer>Peer-to-peer gameplay via PeerJS · Keep this page open while playing</footer>
+<p class="foot">Peer-to-peer connection powered by PeerJS</p>
 </main>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
-(() => {
-const $ = id => document.getElementById(id);
-const lobby = $('lobby'), gamePanel = $('gamePanel'), statusEl = $('status');
-const canvas = $('game'), ctx = canvas.getContext('2d');
-const W=960,H=540,PADDLE_H=100,PADDLE_W=13,BALL_R=9,WIN_SCORE=7;
-let peer=null, conn=null, role=null, roomId='', connected=false, gameStarted=false, matchOver=false;
-let myY=H/2-PADDLE_H/2, oppY=H/2-PADDLE_H/2;
-let ball={x:W/2,y:H/2,vx:5,vy:2.4}, scores=[0,0], lastTime=0, raf=0, lastSend=0, lastState=0;
-let keys=new Set(), touchDir=0, serveTimer=0, awaitingStart=false, hostStarted=false;
-function setStatus(msg,type=''){statusEl.textContent=msg;statusEl.className=type;}
-function randomCode(){return 'PONG-'+Math.random().toString(36).slice(2,5).toUpperCase()+'-'+Math.floor(100+Math.random()*900);}
-function showGame(){lobby.classList.add('hidden');gamePanel.style.display='block';$('roomCode').textContent=roomId;}
-function showOverlay(title,text,button='Start match',showButton=true){$('overlayTitle').textContent=title;$('overlayText').textContent=text;$('startBtn').textContent=button;$('startBtn').classList.toggle('hidden',!showButton);$('overlay').classList.remove('hidden');}
-function hideOverlay(){$('overlay').classList.add('hidden');}
-function setScore(){ $('leftScore').textContent=scores[0];$('rightScore').textContent=scores[1]; }
-function send(data){if(conn&&conn.open){try{conn.send(data)}catch(e){}}}
-function cleanPeer(){cancelAnimationFrame(raf);raf=0;connected=false;gameStarted=false;matchOver=false;awaitingStart=false;hostStarted=false;keys.clear();touchDir=0;
- if(conn){try{conn.close()}catch(e){}conn=null}if(peer){try{peer.destroy()}catch(e){}peer=null}}
-function backToLobby(msg='Ready. Create a lobby or join a friend\\'s code.'){cleanPeer();role=null;roomId='';gamePanel.style.display='none';lobby.classList.remove('hidden');setStatus(msg);}
-function initPeer(id){return new Promise((resolve,reject)=>{
- if(!window.Peer){reject(new Error('PeerJS failed to load. Check your internet connection and reload.'));return}
- peer=new Peer(id,{debug:0});
- peer.on('open',id=>resolve(id));
- peer.on('error',err=>{setStatus(peerError(err),'bad');if(!connected)reject(err)});
- peer.on('disconnected',()=>{setStatus('Signalling connection interrupted. Reconnecting…','bad');if(peer&&!peer.destroyed)peer.reconnect()});
- peer.on('close',()=>{if(gamePanel.style.display==='block'&&connected){setStatus('Peer connection closed.','bad')}});
- });}
-function peerError(err){if(err.type==='unavailable-id')return 'That room code is already in use. Try creating another lobby.';if(err.type==='peer-unavailable')return 'Lobby not found. Check the code and try again.';if(err.type==='network')return 'Network error. Check your connection.';if(err.type==='browser-incompatible')return 'This browser does not support the required connection.';return 'Connection error: '+(err.message||err.type||'unknown error');}
-$('hostBtn').onclick=async()=>{
- cleanPeer();role='host';roomId=randomCode();setStatus('Creating lobby…');
- try{await initPeer(roomId);showGame();setStatus('Lobby created. Share the code and wait for your opponent.','good');showOverlay('Waiting for player','Share code '+roomId+' with your friend.');peer.on('connection',c=>{if(conn){c.on('open',()=>c.close());return}conn=c;wireConnection();});}
- catch(e){cleanPeer();role=null;setStatus(peerError(e),'bad');}
-};
-$('joinBtn').onclick=async()=>{
- const code=$('joinCode').value.trim().toUpperCase();if(!code){setStatus('Enter a lobby code first.','bad');return}
- cleanPeer();role='guest';roomId=code;setStatus('Connecting to '+code+'…');
- try{await initPeer();conn=peer.connect(code,{reliable:true});wireConnection();}
- catch(e){cleanPeer();role=null;setStatus(peerError(e),'bad');}
-};
-function wireConnection(){
- if(!conn)return;
- conn.on('open',()=>{
-  connected=true;showGame();$('leftName').textContent='HOST';$('rightName').textContent='GUEST';
-  setStatus('Connected! Waiting for host to start the match.','good');
-  if(role==='guest')send({type:'hello',name:'Guest'});
-  else send({type:'hello',name:'Host'});
-  showOverlay(role==='host'?'Opponent connected':'Connected to host',role==='host'?'Press Start match when you are ready.':'Waiting for the host to start.',role==='host'?'Start match':'Waiting…',role==='host');
-  if(!raf)raf=requestAnimationFrame(loop);
- });
- conn.on('data',data=>{
-  if(!data||typeof data!=='object')return;
-  if(data.type==='hello'){setStatus('Opponent connected. Ready to play!','good');if(role==='host')showOverlay('Ready to play?','Both players are connected. Start when ready.','Start match',true);}
-  if(data.type==='start'&&role==='guest'){resetMatch(data.seed||0);gameStarted=true;matchOver=false;hideOverlay();setStatus('Match in progress.','good');}
-  if(data.type==='input'&&role==='host'&&Number.isFinite(data.y)){oppY=clamp(data.y,0,H-PADDLE_H);}
-  if(data.type==='state'&&role==='guest'){applyState(data);}
-  if(data.type==='point'&&role==='guest'){scores=data.scores||scores;setScore();}
-  if(data.type==='end'){gameStarted=false;matchOver=true;scores=data.scores||scores;setScore();showOverlay(data.winner==='host'?'You win!':'Opponent wins!', 'Final score '+scores[0]+' – '+scores[1]+'.', 'Play again',true);}
-  if(data.type==='rematch'&&role==='guest'){resetMatch(0);gameStarted=false;showOverlay('Rematch ready','The host is ready for another game.','Waiting…',false);}
-  if(data.type==='startRematch'&&role==='guest'){resetMatch(0);gameStarted=true;matchOver=false;hideOverlay();}
- });
- conn.on('close',()=>{connected=false;gameStarted=false;showOverlay('Opponent disconnected','The connection closed. Return to the lobby and reconnect.', 'Back to lobby',true);$('startBtn').onclick=()=>backToLobby();setStatus('Opponent disconnected.','bad');});
- conn.on('error',e=>setStatus('Peer connection error: '+(e.message||'unknown'),'bad'));
-}
-function clamp(v,min,max){return Math.max(min,Math.min(max,v));}
-function resetMatch(seed=0){scores=[0,0];myY=oppY=H/2-PADDLE_H/2;resetBall(seed);setScore();matchOver=false;serveTimer=0;}
-function resetBall(seed=0){ball={x:W/2,y:H/2,vx:(seed%2? -1:1)*5,vy:(Math.random()*4-2)};if(Math.abs(ball.vy)<1)ball.vy=1.5;}
-$('startBtn').onclick=()=>{
- if(!connected){if(!conn&&role===null)backToLobby();return}
- if(role==='host'){
-  if(matchOver){send({type:'startRematch'});resetMatch(0);gameStarted=true;matchOver=false;hideOverlay();sendState();}
-  else{resetMatch(Math.floor(Math.random()*2));gameStarted=true;hostStarted=true;hideOverlay();send({type:'start',seed:Math.floor(Math.random()*2)});}
- }else if(matchOver){send({type:'rematch'});showOverlay('Rematch requested','Waiting for the host to start again.','Waiting…',false);}
-};
-$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(roomId);$('copyBtn').textContent='Copied!';setTimeout(()=>$('copyBtn').textContent='Copy code',1200)}catch(e){prompt('Copy this lobby code:',roomId)}};
-$('leaveBtn').onclick=()=>backToLobby();
-function applyState(d){if(!Number.isFinite(d.oy)||!d.ball)return;oppY=clamp(d.oy,0,H-PADDLE_H);ball={x:d.ball.x,y:d.ball.y,vx:d.ball.vx,vy:d.ball.vy};scores=d.scores||scores;setScore();if(d.gameStarted!==undefined)gameStarted=d.gameStarted;if(d.matchOver&&!matchOver){matchOver=true;gameStarted=false;showOverlay('Match finished','The host is ready for a rematch.','Waiting…',false)}}
-function sendState(){send({type:'state',oy:myY,ball:{...ball},scores,gameStarted,matchOver});}
-function point(who){scores[who]++;setScore();send({type:'point',scores});if(scores[who]>=WIN_SCORE){gameStarted=false;matchOver=true;send({type:'end',winner:who===0?'host':'guest',scores});showOverlay(who===0?'You win!':'Opponent wins!','Final score '+scores[0]+' – '+scores[1]+'.','Play again',role==='host');return}
- resetBall(who);serveTimer=0.65;
-}
-function update(dt){
- const move=(keys.has('ArrowUp')||keys.has('w')||keys.has('W')?-1:0)+(keys.has('ArrowDown')||keys.has('s')||keys.has('S')?1:0);
- myY=clamp(myY+(move||touchDir)*420*dt,0,H-PADDLE_H);
- if(role==='guest'){if(performance.now()-lastSend>30){send({type:'input',y:myY});lastSend=performance.now()}return}
- if(!gameStarted||matchOver)return;
- if(serveTimer>0){serveTimer-=dt;return}
- ball.x+=ball.vx*dt*60;ball.y+=ball.vy*dt*60;
- if(ball.y-BALL_R<0){ball.y=BALL_R;ball.vy=Math.abs(ball.vy)}
- if(ball.y+BALL_R>H){ball.y=H-BALL_R;ball.vy=-Math.abs(ball.vy)}
- const lx=34,rx=W-34-PADDLE_W;
- if(ball.vx<0&&ball.x-BALL_R<=lx+PADDLE_W&&ball.x>lx&&ball.y>=myY&&ball.y<=myY+PADDLE_H){ball.x=lx+PADDLE_W+BALL_R;ball.vx=Math.min(10,Math.abs(ball.vx)*1.045);ball.vy+=((ball.y-(myY+PADDLE_H/2))/(PADDLE_H/2))*1.8}
- if(ball.vx>0&&ball.x+BALL_R>=rx&&ball.x<rx+PADDLE_W&&ball.y>=oppY&&ball.y<=oppY+PADDLE_H){ball.x=rx-BALL_R;ball.vx=-Math.min(10,Math.abs(ball.vx)*1.045);ball.vy+=((ball.y-(oppY+PADDLE_H/2))/(PADDLE_H/2))*1.8}
- if(ball.x<0)point(1);else if(ball.x>W)point(0);
- if(performance.now()-lastState>33){sendState();lastState=performance.now()}
-}
-function draw(){
- ctx.clearRect(0,0,W,H);ctx.fillStyle='#080f1e';ctx.fillRect(0,0,W,H);
- ctx.strokeStyle='#253651';ctx.lineWidth=3;ctx.setLineDash([12,15]);ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();ctx.setLineDash([]);
- ctx.fillStyle='#72f2c4';ctx.fillRect(34,role==='host'?myY:oppY,PADDLE_W,PADDLE_H);ctx.fillStyle='#7da9ff';ctx.fillRect(W-34-PADDLE_W,role==='host'?oppY:myY,PADDLE_W,PADDLE_H);
- ctx.fillStyle='#edf4ff';ctx.beginPath();ctx.arc(ball.x,ball.y,BALL_R,0,Math.PI*2);ctx.fill();
- if(!connected){ctx.fillStyle='#94a7c5';ctx.font='18px system-ui';ctx.textAlign='center';ctx.fillText('Waiting for connection…',W/2,H/2+100)}
-}
-function loop(t){if(!raf)return;const dt=Math.min((t-lastTime)/1000||0,0.04);lastTime=t;if(connected){update(dt);draw()}raf=requestAnimationFrame(loop)}
-window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown',' '].includes(e.key))e.preventDefault();keys.add(e.key)});
-window.addEventListener('keyup',e=>keys.delete(e.key));
-window.addEventListener('blur',()=>keys.clear());
-function holdButton(id,dir){const b=$(id);const down=e=>{e.preventDefault();touchDir=dir};const up=e=>{e.preventDefault();if(touchDir===dir)touchDir=0};b.addEventListener('pointerdown',down);['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,up));}
-holdButton('upBtn',-1);holdButton('downBtn',1);
-draw();
+(()=>{
+const $=id=>document.getElementById(id), W=480,H=600,PH=88,PW=10,R=8,WIN=7;
+let peer=null,conn=null,role=null,code='',peerId='',connected=false,running=false,over=false,raf=0,last=0,lastSend=0,lastState=0,touch=0,keys={};
+let y=H/2-PH/2,otherY=y,ball={x:W/2,y:H/2,vx:4,vy:2},scores=[0,0];
+const home=$('homeView'),game=$('gameView'),canvas=$('canvas'),ctx=canvas.getContext('2d');
+function status(s,type=''){$('status').textContent=s;$('status').className=type}
+function newCode(){const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let out='';for(let i=0;i<6;i++)out+=chars[Math.floor(Math.random()*chars.length)];return out}
+function idFor(c){return 'pp-'+c.toLowerCase()}
+function overlay(title,msg,btn='Waiting…',show=false){$('overlayTitle').textContent=title;$('overlayText').textContent=msg;$('overlayBtn').textContent=btn;$('overlayBtn').classList.toggle('hidden',!show);$('overlay').classList.remove('hidden')}
+function hideOverlay(){$('overlay').classList.add('hidden')}
+function setScores(){$('scoreA').textContent=scores[role==='host'?0:1];$('scoreB').textContent=scores[role==='host'?1:0]}
+function send(d){try{if(conn&&conn.open)conn.send(d)}catch(e){}}
+function resetBall(direction=1){ball={x:W/2,y:H/2,vx:direction*4,vy:(Math.random()*3-1.5)||1.2}}
+function reset(){scores=[0,0];y=otherY=H/2-PH/2;resetBall(Math.random()<.5?-1:1);setScores();over=false}
+function closeAll(){if(raf)cancelAnimationFrame(raf);raf=0;try{if(conn)conn.close()}catch(e){}try{if(peer)peer.destroy()}catch(e){}peer=conn=null;connected=running=over=false;keys={};touch=0}
+function back(){closeAll();role=code=peerId='';game.style.display='none';home.style.display='block';status('Ready when you are. Both players need an internet connection.')}
+function errText(e){if(e&&e.type==='peer-unavailable')return 'Lobby not found. Check the six-character code.';if(e&&e.type==='unavailable-id')return 'That room code is already in use. Create a new lobby.';return 'Connection failed: '+((e&&e.message)|| (e&&e.type)||'check your internet and try again')}
+function openPeer(id){return new Promise((resolve,reject)=>{if(!window.Peer)return reject(Error('PeerJS library did not load. Check internet and reload.'));let settled=false;peer=new Peer(id? id:undefined,{debug:0});peer.on('open',v=>{if(!settled){settled=true;resolve(v)}});peer.on('error',e=>{if(!settled){settled=true;reject(e)}else status(errText(e),'bad')});peer.on('disconnected',()=>{if(peer&&!peer.destroyed)peer.reconnect()})})}
+function showGame(){home.style.display='none';game.style.display='block';$('roomCode').textContent=code}
+async function host(){closeAll();role='host';code=newCode();peerId=idFor(code);$('hostBtn').disabled=true;status('Creating room '+code+'…');
+try{await openPeer(peerId);showGame();status('Room created! Share the code with your friend.','good');overlay('Waiting for player','Share code '+code+' with your friend.');peer.on('connection',c=>{if(conn){c.close();return}conn=c;wire()});}catch(e){closeAll();role=null;status(errText(e),'bad')}finally{$('hostBtn').disabled=false}}
+async function join(){let c=$('joinInput').value.toUpperCase().replace(/[^A-Z0-9]/g,'');if(c.length!==6){status('Enter the full 6-character lobby code.','bad');return}closeAll();role='guest';code=c;$('joinBtn').disabled=true;status('Connecting to '+code+'…');
+try{await openPeer();conn=peer.connect(idFor(code),{reliable:true});wire()}catch(e){closeAll();role=null;status(errText(e),'bad')}finally{$('joinBtn').disabled=false}}
+function wire(){conn.on('open',()=>{connected=true;showGame();$('leftLabel').textContent=role==='host'?'HOST':'YOU';$('rightLabel').textContent=role==='host'?'YOU':'HOST';status('Connected!','good');send({type:'hello'});overlay(role==='host'?'Opponent connected':'Connected to host',role==='host'?'Ready? Start the match when you are.':'Waiting for the host to start.','Start match',role==='host');if(!raf){last=performance.now();raf=requestAnimationFrame(loop)}});conn.on('data',d=>{if(!d)return;if(d.type==='hello'&&role==='host')overlay('Ready to play?','Your friend has joined.','Start match',true);if(d.type==='start'&&role==='guest'){reset();running=true;hideOverlay()}if(d.type==='input'&&role==='host')otherY=clamp(d.y,0,H-PH);if(d.type==='state'&&role==='guest'){otherY=clamp(d.y,0,H-PH);ball=d.ball;scores=d.scores;setScores();if(d.over&&!over){over=true;running=false;overlay('Match over','The host can start a rematch.')}}if(d.type==='end'){scores=d.scores;setScores();over=true;running=false;overlay(d.winner===role?'You win!':'Game over',scores[0]+' – '+scores[1],'Play again',role==='host')}});conn.on('close',()=>{connected=false;running=false;overlay('Connection lost','Your opponent disconnected.','Back to lobby',true);$('overlayBtn').onclick=back;status('Opponent disconnected.','bad')});conn.on('error',e=>status(errText(e),'bad'))}
+function clamp(n,a,b){return Math.max(a,Math.min(b,n))}
+function start(){if(!connected)return;if(role==='host'){reset();running=true;over=false;hideOverlay();send({type:'start'});lastState=0}else overlay('Waiting for host','The host starts the next round.')}
+$('hostBtn').onclick=host;$('joinBtn').onclick=join;$('joinInput').addEventListener('keydown',e=>{if(e.key==='Enter')join()});$('overlayBtn').onclick=start;$('leaveBtn').onclick=back;
+$('copyBtn').onclick=async()=>{try{await navigator.clipboard.writeText(code);$('copyBtn').textContent='Copied!';setTimeout(()=>$('copyBtn').textContent='Copy',1200)}catch(e){prompt('Copy room code:',code)}};
+function point(who){scores[who]++;setScores();resetBall(who===0?1:-1);if(scores[who]>=WIN){running=false;over=true;send({type:'end',winner:who===0?'host':'guest',scores});overlay(who===(role==='host'?0:1)?'You win!':'Game over',scores[0]+' – '+scores[1],'Play again',role==='host');return}send({type:'point',scores})}
+function update(dt){let m=(keys.up?-1:0)+(keys.down?1:0);y=clamp(y+(m||touch)*360*dt,0,H-PH);if(role==='guest'){if(performance.now()-lastSend>35){send({type:'input',y});lastSend=performance.now()}return}if(!running||over)return;ball.x+=ball.vx*dt*60;ball.y+=ball.vy*dt*60;if(ball.y<R){ball.y=R;ball.vy=Math.abs(ball.vy)}if(ball.y>H-R){ball.y=H-R;ball.vy=-Math.abs(ball.vy)}
+const lx=25,rx=W-25-PW;if(ball.vx<0&&ball.x-R<=lx+PW&&ball.x>lx&&ball.y>=y&&ball.y<=y+PH){ball.x=lx+PW+R;ball.vx=Math.min(8,Math.abs(ball.vx)*1.04);ball.vy+=(ball.y-y-PH/2)/(PH/2)*1.5}if(ball.vx>0&&ball.x+R>=rx&&ball.x<rx+PW&&ball.y>=otherY&&ball.y<=otherY+PH){ball.x=rx-R;ball.vx=-Math.min(8,Math.abs(ball.vx)*1.04);ball.vy+=(ball.y-otherY-PH/2)/(PH/2)*1.5}if(ball.x<0)point(1);if(ball.x>W)point(0);if(performance.now()-lastState>40){send({type:'state',y,ball,scores,over});lastState=performance.now()}}
+function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#06152b';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#174064';ctx.lineWidth=2;ctx.setLineDash([9,12]);ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#26d8ff';ctx.shadowBlur=15;ctx.shadowColor='#26d8ff';ctx.fillRect(25,y,PW,PH);ctx.fillStyle='#ff398b';ctx.shadowColor='#ff398b';ctx.fillRect(W-25-PW,otherY,PW,PH);ctx.fillStyle='#fff';ctx.shadowColor='#fff';ctx.beginPath();ctx.arc(ball.x,ball.y,R,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+function loop(t){if(!raf)return;let dt=Math.min((t-last)/1000,.04);last=t;if(connected){update(dt);draw()}raf=requestAnimationFrame(loop)}
+window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown',' '].includes(e.key))e.preventDefault();if(e.key==='ArrowUp'||e.key.toLowerCase()==='w')keys.up=true;if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')keys.down=true});
+window.addEventListener('keyup',e=>{if(e.key==='ArrowUp'||e.key.toLowerCase()==='w')keys.up=false;if(e.key==='ArrowDown'||e.key.toLowerCase()==='s')keys.down=false});
+function hold(id,d){let b=$(id);const on=e=>{e.preventDefault();touch=d};const off=e=>{e.preventDefault();if(touch===d)touch=0};b.addEventListener('pointerdown',on);['pointerup','pointercancel','pointerleave'].forEach(ev=>b.addEventListener(ev,off))}
+hold('upBtn',-1);hold('downBtn',1);draw();
 })();
 </script>
 </body>
